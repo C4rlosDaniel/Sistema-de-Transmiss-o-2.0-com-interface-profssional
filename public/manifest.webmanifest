@@ -1,0 +1,13 @@
+{
+  "name": "ClubeON CCP",
+  "short_name": "ClubeON",
+  "description": "Sistema profissional de transmissão digital multi-telas",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0b0d",
+  "theme_color": "#E74C3C",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

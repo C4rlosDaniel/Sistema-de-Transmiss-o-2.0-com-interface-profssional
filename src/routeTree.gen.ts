@@ -9,38 +9,133 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as TerminalIdRouteImport } from './routes/terminal.$id'
+import { Route as AppTerminalsRouteImport } from './routes/app.terminals'
+import { Route as AppPreviewRouteImport } from './routes/app.preview'
+import { Route as AppPresentationsRouteImport } from './routes/app.presentations'
+import { Route as AppLibraryRouteImport } from './routes/app.library'
 
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const TerminalIdRoute = TerminalIdRouteImport.update({
+  id: '/terminal/$id',
+  path: '/terminal/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppTerminalsRoute = AppTerminalsRouteImport.update({
+  id: '/terminals',
+  path: '/terminals',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPreviewRoute = AppPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPresentationsRoute = AppPresentationsRouteImport.update({
+  id: '/presentations',
+  path: '/presentations',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLibraryRoute = AppLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/app/library': typeof AppLibraryRoute
+  '/app/presentations': typeof AppPresentationsRoute
+  '/app/preview': typeof AppPreviewRoute
+  '/app/terminals': typeof AppTerminalsRoute
+  '/terminal/$id': typeof TerminalIdRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/library': typeof AppLibraryRoute
+  '/app/presentations': typeof AppPresentationsRoute
+  '/app/preview': typeof AppPreviewRoute
+  '/app/terminals': typeof AppTerminalsRoute
+  '/terminal/$id': typeof TerminalIdRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/app/library': typeof AppLibraryRoute
+  '/app/presentations': typeof AppPresentationsRoute
+  '/app/preview': typeof AppPreviewRoute
+  '/app/terminals': typeof AppTerminalsRoute
+  '/terminal/$id': typeof TerminalIdRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/app/library'
+    | '/app/presentations'
+    | '/app/preview'
+    | '/app/terminals'
+    | '/terminal/$id'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/app/library'
+    | '/app/presentations'
+    | '/app/preview'
+    | '/app/terminals'
+    | '/terminal/$id'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/app/library'
+    | '/app/presentations'
+    | '/app/preview'
+    | '/app/terminals'
+    | '/terminal/$id'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  TerminalIdRoute: typeof TerminalIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +143,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/terminal/$id': {
+      id: '/terminal/$id'
+      path: '/terminal/$id'
+      fullPath: '/terminal/$id'
+      preLoaderRoute: typeof TerminalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/terminals': {
+      id: '/app/terminals'
+      path: '/terminals'
+      fullPath: '/app/terminals'
+      preLoaderRoute: typeof AppTerminalsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/preview': {
+      id: '/app/preview'
+      path: '/preview'
+      fullPath: '/app/preview'
+      preLoaderRoute: typeof AppPreviewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/presentations': {
+      id: '/app/presentations'
+      path: '/presentations'
+      fullPath: '/app/presentations'
+      preLoaderRoute: typeof AppPresentationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/library': {
+      id: '/app/library'
+      path: '/library'
+      fullPath: '/app/library'
+      preLoaderRoute: typeof AppLibraryRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppLibraryRoute: typeof AppLibraryRoute
+  AppPresentationsRoute: typeof AppPresentationsRoute
+  AppPreviewRoute: typeof AppPreviewRoute
+  AppTerminalsRoute: typeof AppTerminalsRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppLibraryRoute: AppLibraryRoute,
+  AppPresentationsRoute: AppPresentationsRoute,
+  AppPreviewRoute: AppPreviewRoute,
+  AppTerminalsRoute: AppTerminalsRoute,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  TerminalIdRoute: TerminalIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
