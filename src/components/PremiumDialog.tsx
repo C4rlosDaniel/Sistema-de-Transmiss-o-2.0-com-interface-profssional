@@ -108,7 +108,7 @@ function DialogShell({ item, onClose }: { item: DialogItem; onClose: () => void 
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 6 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         className="relative w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-b from-zinc-900 to-zinc-950 text-white shadow-2xl shadow-black/60"
       >
         <button
