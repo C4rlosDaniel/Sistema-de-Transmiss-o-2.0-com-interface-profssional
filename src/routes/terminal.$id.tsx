@@ -60,18 +60,15 @@ function TerminalScreen() {
     <div onClick={toggleFs} className="h-screen w-screen bg-black overflow-hidden cursor-pointer relative">
       <PresentationPlayer key={tick} presentationId={terminal.presentationId} />
 
-      {/* Marca d'água discreta no canto inferior direito */}
-      <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-sm px-2.5 py-1 opacity-50">
-        <img src={logo} alt="" className="h-4 w-4" />
-        <span className="text-[10px] font-medium text-white/80 tracking-wide">ClubeON</span>
+      {/* Marca d'água: somente o logo */}
+      <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-white/90 p-1 shadow-lg opacity-70">
+        <img src={logo} alt="Clube Pirassununga" className="h-7 w-7 object-contain" />
       </div>
 
       <div className={`absolute top-0 left-0 right-0 p-4 flex justify-between items-center transition-opacity duration-300 ${showUI ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        <div className="flex items-center gap-2 rounded-full bg-black/60 text-white px-3 py-1.5 text-xs backdrop-blur">
-          <img src={logo} alt="" className="h-5 w-5" />
+        <div className="flex items-center gap-2 rounded-full bg-black/60 text-white pl-1 pr-3 py-1 text-xs backdrop-blur">
+          <span className="rounded-full bg-white p-0.5"><img src={logo} alt="" className="h-5 w-5 object-contain" /></span>
           <span className="font-semibold">{terminal.name}</span>
-          <span className="text-white/50">·</span>
-          <span className="text-white/60">ClubeON CCP</span>
         </div>
         <button onClick={exit} className="flex items-center gap-2 rounded-full bg-black/60 hover:bg-primary text-white px-3 py-1.5 text-xs backdrop-blur transition">
           <LogOut className="h-3 w-3" /> Sair do Terminal
@@ -80,10 +77,12 @@ function TerminalScreen() {
 
       {!terminal.presentationId && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center text-white/40">
-            <img src={logo} alt="" className="h-24 w-24 mx-auto mb-4 opacity-60" />
-            <p className="text-sm">Nenhuma apresentação vinculada</p>
-            <p className="text-xs mt-1">Atribua uma apresentação no painel administrativo.</p>
+          <div className="text-center">
+            <div className="mx-auto mb-5 inline-flex rounded-full bg-white p-3 opacity-80">
+              <img src={logo} alt="" className="h-24 w-24 object-contain" />
+            </div>
+            <p className="text-sm text-white/60">Nenhuma apresentação vinculada</p>
+            <p className="text-xs mt-1 text-white/40">Atribua uma apresentação no painel administrativo.</p>
           </div>
         </div>
       )}
