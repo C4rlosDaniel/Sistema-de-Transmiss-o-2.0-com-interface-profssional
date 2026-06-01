@@ -4,6 +4,7 @@ import { Plus, Trash2, Eye, Pencil, Check, X, Upload, Image as ImageIcon, Film, 
 import { useStore, createPresentation, updatePresentation, deletePresentation, addMedia, type Media, type Presentation } from "@/lib/store";
 import { dialog } from "@/components/PremiumDialog";
 import { toast } from "sonner";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export const Route = createFileRoute("/app/presentations")({ component: Pres });
 
@@ -26,14 +27,14 @@ function Pres() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
-      <aside className="space-y-2">
+    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 ccp-anim-fade">
+      <aside className="space-y-2 premium-border p-3">
         <button onClick={handleCreate} className="w-full flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground py-2 text-sm font-medium hover:opacity-90">
           <Plus className="h-4 w-4" /> Nova Apresentação
         </button>
         <div className="space-y-1">
           {presentations.map((p) => (
-            <button key={p.id} onClick={() => setSelectedId(p.id)} className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-left text-sm ${selectedId === p.id ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`}>
+            <button key={p.id} onClick={() => setSelectedId(p.id)} className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-left text-sm transition ${selectedId === p.id ? "ccp-tab-active" : "hover:bg-accent/50"}`}>
               <span className="truncate">{p.name}</span>
               <span className="text-xs text-muted-foreground flex items-center gap-1">{p.mediaIds.length} <ChevronRight className="h-3 w-3" /></span>
             </button>
@@ -42,7 +43,7 @@ function Pres() {
         </div>
       </aside>
       <section>
-        {selected ? <Editor pres={selected} media={media} /> : <div className="rounded-lg border border-dashed p-16 text-center text-muted-foreground">Selecione ou crie uma apresentação.</div>}
+        {selected ? <Editor key={selected.id} pres={selected} media={media} /> : <div className="premium-border p-16 text-center text-muted-foreground">Selecione ou crie uma apresentação.</div>}
       </section>
     </div>
   );
@@ -64,7 +65,7 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 ccp-anim-slide">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         {editingName ? (
           <div className="flex gap-2 items-center">
@@ -84,8 +85,28 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
           <label className="flex items-center gap-1 text-xs ml-3">
             <input type="checkbox" checked={pres.loop} onChange={(e) => updatePresentation(pres.id, { loop: e.target.checked })} /> Loop
           </label>
+          <label className="text-xs text-muted-foreground ml-3">Transição:</label>
+          <select
+            value={pres.transition ?? "fade"}
+            onChange={(e) => updatePresentation(pres.id, { transition: e.target.value as Presentation["transition"] })}
+            className="rounded border bg-background px-2 py-1 text-xs"
+          >
+            <option value="fade">Fade</option>
+            <option value="zoom">Zoom</option>
+            <option value="slide">Slide</option>
+            <option value="push">Push</option>
+          </select>
           <button onClick={async () => { if (await dialog.confirm({ title: "Excluir apresentação?", description: "Esta ação não pode ser desfeita.", confirmLabel: "Excluir", destructive: true })) { deletePresentation(pres.id); toast.success("Apresentação excluída"); } }} className="ml-3 text-destructive flex items-center gap-1 text-sm"><Trash2 className="h-4 w-4" /> Excluir</button>
         </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold mb-2">Descrição / Anotações</p>
+        <RichTextEditor
+          value={pres.description ?? ""}
+          onChange={(html) => updatePresentation(pres.id, { description: html })}
+          placeholder="Adicione descrição, instruções, observações..."
+        />
       </div>
 
       <div className="flex items-center gap-2">

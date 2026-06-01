@@ -42,7 +42,7 @@ function Terms() {
         {terminals.map((t) => {
           const pres = presentations.find((p) => p.id === t.presentationId);
           return (
-            <div key={t.id} className="rounded-lg border bg-card p-5 space-y-4">
+            <div key={t.id} className="premium-border p-5 space-y-4 ccp-anim-slide">
               <div className="flex items-start justify-between gap-2">
                 {editing === t.id ? (
                   <div className="flex gap-1 items-center flex-1">
