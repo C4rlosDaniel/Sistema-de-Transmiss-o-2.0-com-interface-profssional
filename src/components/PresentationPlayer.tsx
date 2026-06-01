@@ -30,16 +30,22 @@ export function PresentationPlayer({ presentationId }: { presentationId: string 
   if (items.length === 0) return <div className="h-full w-full flex items-center justify-center text-white/50 text-sm">Apresentação vazia</div>;
 
   const cur = items[idx % items.length];
+  const transition = pres.transition ?? "fade";
+  const animClass =
+    transition === "zoom" ? "ccp-anim-zoom" :
+    transition === "slide" ? "ccp-anim-slide" :
+    transition === "push" ? "ccp-anim-push" :
+    "ccp-anim-fade";
 
   return (
     <div className="h-full w-full bg-black relative">
       {cur.type === "image" ? (
-        <img key={cur.id + idx} src={cur.dataUrl} alt="" className="h-full w-full object-contain animate-in fade-in duration-500" />
+        <img key={cur.id + idx} src={cur.dataUrl} alt="" className={`h-full w-full object-contain ${animClass}`} />
       ) : (
         <video
           key={cur.id + idx}
           src={cur.dataUrl}
-          className="h-full w-full object-contain"
+          className={`h-full w-full object-contain ${animClass}`}
           autoPlay
           muted
           playsInline

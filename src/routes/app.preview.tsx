@@ -33,8 +33,8 @@ function Prev() {
       </div>
 
       {pres ? (
-        <div className="flex justify-center">
-          <div className={`rounded-xl border-8 border-zinc-800 bg-black shadow-2xl overflow-hidden ${orient === "h" ? "w-full max-w-4xl aspect-video" : "h-[70vh] aspect-[9/16]"}`}>
+        <div className="flex justify-center ccp-anim-zoom">
+          <div className={`premium-border-gradient bg-black shadow-2xl overflow-hidden ${orient === "h" ? "w-full max-w-4xl aspect-video" : "h-[70vh] aspect-[9/16]"}`}>
             <PresentationPlayer presentationId={presId} />
           </div>
         </div>
@@ -53,7 +53,7 @@ function Prev() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div className="premium-border p-4 ccp-anim-fade">
       <p className="text-xs uppercase text-muted-foreground">{label}</p>
       <p className="text-3xl font-bold mt-1">{value}</p>
     </div>

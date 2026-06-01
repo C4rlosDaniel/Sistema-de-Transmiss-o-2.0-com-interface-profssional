@@ -14,6 +14,8 @@ export type Presentation = {
   mediaIds: string[];
   durationMs: number; // per-image duration
   loop: boolean;
+  description?: string; // rich text HTML
+  transition?: "fade" | "zoom" | "slide" | "push";
 };
 
 export type Terminal = {
@@ -227,7 +229,7 @@ export function createPresentation(name: string): string {
     ...s,
     presentations: [
       ...s.presentations,
-      { id, name, mediaIds: [], durationMs: 5000, loop: true },
+      { id, name, mediaIds: [], durationMs: 5000, loop: true, description: "", transition: "fade" },
     ],
   }));
   return id;

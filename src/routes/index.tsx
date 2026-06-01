@@ -45,11 +45,9 @@ function Index() {
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2 bg-[#0b0b0d] text-white">
       <div className="flex items-center justify-center p-8 md:p-16">
         <div className="w-full max-w-md">
-          <div className="mb-8 flex items-center gap-3">
-            <img src={logo} alt="Clube Pirassununga" className="h-14 w-14" />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">ClubeON <span className="text-primary">CCP</span></h1>
-              <p className="text-xs text-white/60">Transmissão Digital Multi-Telas</p>
+          <div className="mb-8 flex justify-center md:justify-start">
+            <div className="rounded-full bg-white p-2 shadow-2xl shadow-primary/30 ring-1 ring-white/10">
+              <img src={logo} alt="Clube Pirassununga" className="h-20 w-20 object-contain" />
             </div>
           </div>
 

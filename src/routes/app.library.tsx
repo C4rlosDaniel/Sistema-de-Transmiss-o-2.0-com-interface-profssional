@@ -43,7 +43,7 @@ function Lib() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filtered.map((m) => (
-            <div key={m.id} className="group rounded-lg border bg-card overflow-hidden">
+            <div key={m.id} className="group premium-border overflow-hidden ccp-anim-zoom">
               <div className="aspect-video bg-black flex items-center justify-center relative">
                 {m.type === "image" ? (
                   <img src={m.dataUrl} alt={m.name} className="h-full w-full object-cover" />
