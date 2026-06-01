@@ -28,10 +28,10 @@ function Index() {
 
   const handleAdmin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (user === "ADM" && pass === "1234") {
+    if (user === "Club" && pass === "@4922") {
       setSession({ kind: "admin" });
       navigate({ to: "/app/preview" });
-    } else setErr("Credenciais inválidas. Atenção: maiúsculas e minúsculas.");
+    } else setErr("Credenciais inválidas.");
   };
 
   const handleTerminal = (e: React.FormEvent) => {
@@ -71,7 +71,7 @@ function Index() {
                 <label className="block text-sm mb-2">Usuário</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <input value={user} onChange={(e) => setUser(e.target.value)} className="w-full rounded-md bg-white/5 border border-white/10 py-3 pl-10 pr-4 outline-none focus:border-primary" placeholder="ADM" />
+                  <input value={user} onChange={(e) => setUser(e.target.value)} className="w-full rounded-md bg-white/5 border border-white/10 py-3 pl-10 pr-4 outline-none focus:border-primary transition" placeholder="Usuário" autoComplete="username" />
                 </div>
               </div>
               <div>
@@ -85,7 +85,6 @@ function Index() {
               <button type="submit" className="w-full rounded-md bg-primary hover:bg-[oklch(0.5_0.2_27)] py-3 font-semibold transition flex items-center justify-center gap-2">
                 <LogIn className="h-4 w-4" /> Entrar
               </button>
-              <p className="text-xs text-center text-white/40">Padrão: ADM / 1234 — diferencia maiúsculas e minúsculas.</p>
             </form>
           ) : (
             <form onSubmit={handleTerminal} className="space-y-5">

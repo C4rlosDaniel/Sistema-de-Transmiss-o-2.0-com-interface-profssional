@@ -60,7 +60,11 @@ function TerminalScreen() {
     <div onClick={toggleFs} className="h-screen w-screen bg-black overflow-hidden cursor-pointer relative">
       <PresentationPlayer key={tick} presentationId={terminal.presentationId} />
 
-      <img src={logo} alt="" className="pointer-events-none absolute inset-0 m-auto h-32 w-32 opacity-[0.07]" />
+      {/* Marca d'água discreta no canto inferior direito */}
+      <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-sm px-2.5 py-1 opacity-50">
+        <img src={logo} alt="" className="h-4 w-4" />
+        <span className="text-[10px] font-medium text-white/80 tracking-wide">ClubeON</span>
+      </div>
 
       <div className={`absolute top-0 left-0 right-0 p-4 flex justify-between items-center transition-opacity duration-300 ${showUI ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
         <div className="flex items-center gap-2 rounded-full bg-black/60 text-white px-3 py-1.5 text-xs backdrop-blur">

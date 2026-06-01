@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Upload, Trash2, Eye, Pencil, Check, X, Search } from "lucide-react";
 import { useStore, addMedia, deleteMediaFromLibrary, renameMedia, type Media } from "@/lib/store";
+import { dialog } from "@/components/PremiumDialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/library")({ component: Lib });
 
@@ -67,7 +69,7 @@ function Lib() {
                 )}
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase text-muted-foreground">{m.type}</span>
-                  <button onClick={() => { if (confirm("Deseja realmente excluir esta mídia? Ela será removida das apresentações vinculadas.")) deleteMediaFromLibrary(m.id); }} className="text-destructive hover:opacity-80">
+                  <button onClick={async () => { if (await dialog.confirm({ title: "Excluir mídia?", description: "Ela será removida de todas as apresentações vinculadas.", confirmLabel: "Excluir", destructive: true })) { deleteMediaFromLibrary(m.id); toast.success("Mídia excluída"); } }} className="text-destructive hover:opacity-80">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
