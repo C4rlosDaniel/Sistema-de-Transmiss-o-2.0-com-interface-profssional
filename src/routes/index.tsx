@@ -28,10 +28,10 @@ function Index() {
 
   const handleAdmin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (user === "ADM" && pass === "1234") {
+    if (user === "Club" && pass === "@4922") {
       setSession({ kind: "admin" });
       navigate({ to: "/app/preview" });
-    } else setErr("Credenciais inválidas. Atenção: maiúsculas e minúsculas.");
+    } else setErr("Credenciais inválidas.");
   };
 
   const handleTerminal = (e: React.FormEvent) => {
@@ -85,7 +85,6 @@ function Index() {
               <button type="submit" className="w-full rounded-md bg-primary hover:bg-[oklch(0.5_0.2_27)] py-3 font-semibold transition flex items-center justify-center gap-2">
                 <LogIn className="h-4 w-4" /> Entrar
               </button>
-              <p className="text-xs text-center text-white/40">Padrão: ADM / 1234 — diferencia maiúsculas e minúsculas.</p>
             </form>
           ) : (
             <form onSubmit={handleTerminal} className="space-y-5">
