@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Trash2, RefreshCw, ExternalLink, Power, Pencil, Check, X } from "lucide-react";
 import { useStore, createTerminal, updateTerminal, deleteTerminal, pingTerminal } from "@/lib/store";
+import { dialog } from "@/components/PremiumDialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/terminals")({ component: Terms });
 
@@ -10,9 +12,14 @@ function Terms() {
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
-  const handleNew = () => {
-    const name = prompt("Nome do terminal:");
-    if (name) createTerminal(name);
+  const handleNew = async () => {
+    const name = await dialog.prompt({
+      title: "Novo Terminal",
+      description: "Crie uma nova tela para receber transmissões.",
+      placeholder: "Ex: TV Recepção",
+      confirmLabel: "Criar",
+    });
+    if (name) { createTerminal(name); toast.success("Terminal criado"); }
   };
 
   const openTerminal = (id: string) => {
@@ -81,7 +88,7 @@ function Terms() {
                 <button onClick={() => updateTerminal(t.id, { active: !t.active })} className="flex items-center justify-center gap-1 rounded-md border px-3 py-2 text-xs">
                   <Power className="h-3 w-3" />
                 </button>
-                <button onClick={() => { if (confirm("Excluir terminal?")) deleteTerminal(t.id); }} className="flex items-center justify-center gap-1 rounded-md border border-destructive/40 text-destructive px-3 py-2 text-xs">
+                <button onClick={async () => { if (await dialog.confirm({ title: "Excluir terminal?", description: "A tela vinculada será desconectada.", confirmLabel: "Excluir", destructive: true })) { deleteTerminal(t.id); toast.success("Terminal excluído"); } }} className="flex items-center justify-center gap-1 rounded-md border border-destructive/40 text-destructive px-3 py-2 text-xs">
                   <Trash2 className="h-3 w-3" />
                 </button>
               </div>
