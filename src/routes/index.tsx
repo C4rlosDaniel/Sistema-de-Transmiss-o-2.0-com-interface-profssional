@@ -71,7 +71,7 @@ function Index() {
                 <label className="block text-sm mb-2">Usuário</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <input value={user} onChange={(e) => setUser(e.target.value)} className="w-full rounded-md bg-white/5 border border-white/10 py-3 pl-10 pr-4 outline-none focus:border-primary" placeholder="ADM" />
+                  <input value={user} onChange={(e) => setUser(e.target.value)} className="w-full rounded-md bg-white/5 border border-white/10 py-3 pl-10 pr-4 outline-none focus:border-primary transition" placeholder="Usuário" autoComplete="username" />
                 </div>
               </div>
               <div>
