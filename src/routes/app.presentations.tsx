@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Plus, Trash2, Eye, Pencil, Check, X, Upload, Image as ImageIcon, Film, ChevronRight } from "lucide-react";
 import { useStore, createPresentation, updatePresentation, deletePresentation, addMedia, type Media, type Presentation } from "@/lib/store";
+import { dialog } from "@/components/PremiumDialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/presentations")({ component: Pres });
 
@@ -10,9 +12,17 @@ function Pres() {
   const [selectedId, setSelectedId] = useState<string | null>(presentations[0]?.id ?? null);
   const selected = presentations.find((p) => p.id === selectedId) ?? null;
 
-  const handleCreate = () => {
-    const name = prompt("Nome da apresentação:");
-    if (name) setSelectedId(createPresentation(name));
+  const handleCreate = async () => {
+    const name = await dialog.prompt({
+      title: "Nova Apresentação",
+      description: "Dê um nome para identificar essa playlist nas atribuições.",
+      placeholder: "Ex: Vitrine Principal",
+      confirmLabel: "Criar",
+    });
+    if (name) {
+      setSelectedId(createPresentation(name));
+      toast.success("Apresentação criada");
+    }
   };
 
   return (
@@ -74,7 +84,7 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
           <label className="flex items-center gap-1 text-xs ml-3">
             <input type="checkbox" checked={pres.loop} onChange={(e) => updatePresentation(pres.id, { loop: e.target.checked })} /> Loop
           </label>
-          <button onClick={() => { if (confirm("Excluir apresentação?")) deletePresentation(pres.id); }} className="ml-3 text-destructive flex items-center gap-1 text-sm"><Trash2 className="h-4 w-4" /> Excluir</button>
+          <button onClick={async () => { if (await dialog.confirm({ title: "Excluir apresentação?", description: "Esta ação não pode ser desfeita.", confirmLabel: "Excluir", destructive: true })) { deletePresentation(pres.id); toast.success("Apresentação excluída"); } }} className="ml-3 text-destructive flex items-center gap-1 text-sm"><Trash2 className="h-4 w-4" /> Excluir</button>
         </div>
       </div>
 
@@ -119,7 +129,7 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
                 </div>
                 <div className="p-2 flex items-center justify-between gap-2">
                   <span className="text-xs truncate flex items-center gap-1">{m.type === "image" ? <ImageIcon className="h-3 w-3" /> : <Film className="h-3 w-3" />} {m.name}</span>
-                  <button onClick={() => { if (confirm("Remover desta apresentação? A mídia continua na biblioteca.")) updatePresentation(pres.id, { mediaIds: pres.mediaIds.filter((_, i) => i !== idx) }); }} className="text-destructive"><Trash2 className="h-3 w-3" /></button>
+                  <button onClick={async () => { if (await dialog.confirm({ title: "Remover da apresentação?", description: "A mídia continua disponível na biblioteca.", confirmLabel: "Remover", destructive: true })) updatePresentation(pres.id, { mediaIds: pres.mediaIds.filter((_, i) => i !== idx) }); }} className="text-destructive"><Trash2 className="h-3 w-3" /></button>
                 </div>
               </div>
             ))}
