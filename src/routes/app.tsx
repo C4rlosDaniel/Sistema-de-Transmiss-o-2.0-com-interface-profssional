@@ -35,15 +35,25 @@ function AppLayout() {
               Painel Administrativo
             </p>
           </div>
-          <nav className="hidden md:flex items-center gap-1">
-            {tabs.map((t) => {
+          <nav className="hidden md:flex items-center rounded-xl border border-white/5 bg-white/[0.02] p-1 backdrop-blur ccp-tabs-bar">
+            {tabs.map((t, i) => {
               const Active = loc.pathname.startsWith(t.to);
               const Icon = t.icon;
               return (
-                <Link key={t.to} to={t.to} className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition ${Active ? "ccp-tab-active" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}>
-                  <Icon className="h-4 w-4" />
-                  {t.label}
-                </Link>
+                <div key={t.to} className="flex items-center">
+                  {i > 0 && <span className="ccp-tab-sep" aria-hidden />}
+                  <Link
+                    to={t.to}
+                    className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      Active
+                        ? "bg-primary/15 text-white shadow-inner ring-1 ring-primary/40"
+                        : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {t.label}
+                  </Link>
+                </div>
               );
             })}
           </nav>
