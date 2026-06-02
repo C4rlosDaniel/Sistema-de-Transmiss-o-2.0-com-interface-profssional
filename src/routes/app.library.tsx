@@ -46,9 +46,9 @@ function Lib() {
             <div key={m.id} className="group premium-border overflow-hidden ccp-anim-zoom">
               <div className="aspect-video bg-black flex items-center justify-center relative">
                 {m.type === "image" ? (
-                  <img src={m.dataUrl} alt={m.name} className="h-full w-full object-cover" />
+                  <img src={m.url} alt={m.name} className="h-full w-full object-cover" />
                 ) : (
-                  <video src={m.dataUrl} className="h-full w-full object-cover" muted />
+                  <video src={m.url} className="h-full w-full object-cover" muted />
                 )}
                 <button onClick={() => setPreview(m)} className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition">
                   <Eye className="h-8 w-8 text-white opacity-0 group-hover:opacity-100" />
@@ -69,7 +69,7 @@ function Lib() {
                 )}
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase text-muted-foreground">{m.type}</span>
-                  <button onClick={async () => { if (await dialog.confirm({ title: "Excluir mídia?", description: "Ela será removida de todas as apresentações vinculadas.", confirmLabel: "Excluir", destructive: true })) { deleteMediaFromLibrary(m.id); toast.success("Mídia excluída"); } }} className="text-destructive hover:opacity-80">
+                <button onClick={async () => { if (await dialog.confirm({ title: "Excluir mídia?", description: "Ela será removida de todas as apresentações vinculadas.", confirmLabel: "Excluir", destructive: true })) { await deleteMediaFromLibrary(m.id); toast.success("Mídia excluída"); } }} className="text-destructive hover:opacity-80">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -82,9 +82,9 @@ function Lib() {
       {preview && (
         <div onClick={() => setPreview(null)} className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-8 cursor-zoom-out">
           {preview.type === "image" ? (
-            <img src={preview.dataUrl} alt={preview.name} className="max-h-full max-w-full object-contain" />
+            <img src={preview.url} alt={preview.name} className="max-h-full max-w-full object-contain" />
           ) : (
-            <video src={preview.dataUrl} className="max-h-full max-w-full" controls autoPlay />
+            <video src={preview.url} className="max-h-full max-w-full" controls autoPlay />
           )}
         </div>
       )}
