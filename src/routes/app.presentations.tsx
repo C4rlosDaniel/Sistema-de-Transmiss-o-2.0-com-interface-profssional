@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { Plus, Trash2, Eye, Pencil, Check, X, Upload, Image as ImageIcon, Film, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Trash2, Eye, Pencil, Check, X, Upload, Image as ImageIcon, Film, ChevronRight, Save, Loader2 } from "lucide-react";
 import { useStore, createPresentation, updatePresentation, deletePresentation, addMedia, type Media, type Presentation } from "@/lib/store";
 import { dialog } from "@/components/PremiumDialog";
 import { toast } from "sonner";
@@ -21,8 +21,9 @@ function Pres() {
       confirmLabel: "Criar",
     });
     if (name) {
-      setSelectedId(createPresentation(name));
-      toast.success("Apresentação criada");
+      const id = await createPresentation(name);
+      if (id) { setSelectedId(id); toast.success("Apresentação criada"); }
+      else toast.error("Falha ao criar apresentação");
     }
   };
 
@@ -55,13 +56,39 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
   const [name, setName] = useState(pres.name);
   const [showLib, setShowLib] = useState(false);
   const [preview, setPreview] = useState<Media | null>(null);
+  const [draft, setDraft] = useState<Presentation>(pres);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  useEffect(() => { setDraft(pres); setName(pres.name); }, [pres.id]);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(pres);
 
-  const items = pres.mediaIds.map((id) => media.find((m) => m.id === id)).filter(Boolean) as Media[];
+  const items = draft.mediaIds.map((id) => media.find((m) => m.id === id)).filter(Boolean) as Media[];
 
   const onUpload = async (files: FileList | null) => {
     if (!files?.length) return;
-    const added = await addMedia(files);
-    updatePresentation(pres.id, { mediaIds: [...pres.mediaIds, ...added.map((a) => a.id)] });
+    setUploading(true);
+    try {
+      const added = await addMedia(files);
+      setDraft((d) => ({ ...d, mediaIds: [...d.mediaIds, ...added.map((a) => a.id)] }));
+      toast.success(`${added.length} mídia(s) enviada(s)`);
+    } finally { setUploading(false); }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updatePresentation(pres.id, {
+        name: draft.name,
+        mediaIds: draft.mediaIds,
+        durationMs: draft.durationMs,
+        loop: draft.loop,
+        description: draft.description,
+        transition: draft.transition,
+      });
+      toast.success("Apresentação salva e sincronizada");
+    } catch (e) {
+      toast.error("Falha ao salvar");
+    } finally { setSaving(false); }
   };
 
   return (
@@ -70,25 +97,26 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
         {editingName ? (
           <div className="flex gap-2 items-center">
             <input value={name} onChange={(e) => setName(e.target.value)} className="rounded border px-3 py-2 text-lg font-bold" />
-            <button onClick={() => { updatePresentation(pres.id, { name }); setEditingName(false); }} className="p-2 text-primary"><Check className="h-5 w-5" /></button>
+            <button onClick={() => { setDraft((d) => ({ ...d, name })); setEditingName(false); }} className="p-2 text-primary"><Check className="h-5 w-5" /></button>
             <button onClick={() => { setName(pres.name); setEditingName(false); }} className="p-2"><X className="h-5 w-5" /></button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold">{pres.name}</h2>
+            <h2 className="text-2xl font-bold">{draft.name}</h2>
             <button onClick={() => setEditingName(true)} className="text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>
+            {dirty && <span className="text-[10px] uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">alterações pendentes</span>}
           </div>
         )}
         <div className="flex items-center gap-2 flex-wrap">
           <label className="text-xs text-muted-foreground">Duração (s):</label>
-          <input type="number" min={1} value={pres.durationMs / 1000} onChange={(e) => updatePresentation(pres.id, { durationMs: Math.max(1, Number(e.target.value)) * 1000 })} className="w-20 rounded border px-2 py-1 text-sm" />
+          <input type="number" min={1} value={draft.durationMs / 1000} onChange={(e) => setDraft((d) => ({ ...d, durationMs: Math.max(1, Number(e.target.value)) * 1000 }))} className="w-20 rounded border px-2 py-1 text-sm" />
           <label className="flex items-center gap-1 text-xs ml-3">
-            <input type="checkbox" checked={pres.loop} onChange={(e) => updatePresentation(pres.id, { loop: e.target.checked })} /> Loop
+            <input type="checkbox" checked={draft.loop} onChange={(e) => setDraft((d) => ({ ...d, loop: e.target.checked }))} /> Loop
           </label>
           <label className="text-xs text-muted-foreground ml-3">Transição:</label>
           <select
-            value={pres.transition ?? "fade"}
-            onChange={(e) => updatePresentation(pres.id, { transition: e.target.value as Presentation["transition"] })}
+            value={draft.transition ?? "fade"}
+            onChange={(e) => setDraft((d) => ({ ...d, transition: e.target.value as Presentation["transition"] }))}
             className="rounded border bg-background px-2 py-1 text-xs"
           >
             <option value="fade">Fade</option>
@@ -96,22 +124,32 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
             <option value="slide">Slide</option>
             <option value="push">Push</option>
           </select>
-          <button onClick={async () => { if (await dialog.confirm({ title: "Excluir apresentação?", description: "Esta ação não pode ser desfeita.", confirmLabel: "Excluir", destructive: true })) { deletePresentation(pres.id); toast.success("Apresentação excluída"); } }} className="ml-3 text-destructive flex items-center gap-1 text-sm"><Trash2 className="h-4 w-4" /> Excluir</button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !dirty}
+            className="ml-3 flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold shadow-lg shadow-primary/30 disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving ? "Salvando..." : "Salvar Apresentação"}
+          </button>
+          <button onClick={async () => { if (await dialog.confirm({ title: "Excluir apresentação?", description: "Esta ação não pode ser desfeita.", confirmLabel: "Excluir", destructive: true })) { await deletePresentation(pres.id); toast.success("Apresentação excluída"); } }} className="ml-1 text-destructive flex items-center gap-1 text-sm"><Trash2 className="h-4 w-4" /> Excluir</button>
         </div>
       </div>
 
       <div>
         <p className="text-sm font-semibold mb-2">Descrição / Anotações</p>
         <RichTextEditor
-          value={pres.description ?? ""}
-          onChange={(html) => updatePresentation(pres.id, { description: html })}
+          value={draft.description ?? ""}
+          onChange={(html) => setDraft((d) => ({ ...d, description: html }))}
           placeholder="Adicione descrição, instruções, observações..."
         />
       </div>
 
       <div className="flex items-center gap-2">
         <input ref={inputRef} type="file" multiple accept="image/*,video/mp4" className="hidden" onChange={(e) => onUpload(e.target.files)} />
-        <button onClick={() => inputRef.current?.click()} className="flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium"><Upload className="h-4 w-4" /> Upload</button>
+        <button onClick={() => inputRef.current?.click()} disabled={uploading} className="flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-50">
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {uploading ? "Enviando..." : "Upload"}
+        </button>
         <button onClick={() => setShowLib((v) => !v)} className="flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium">{showLib ? "Ocultar" : "Adicionar da"} Biblioteca</button>
       </div>
 
@@ -120,10 +158,10 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
           <p className="text-sm font-medium mb-3">Clique para adicionar à apresentação</p>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
             {media.map((m) => {
-              const added = pres.mediaIds.includes(m.id);
+              const added = draft.mediaIds.includes(m.id);
               return (
-                <button key={m.id} onClick={() => updatePresentation(pres.id, { mediaIds: added ? pres.mediaIds.filter((x) => x !== m.id) : [...pres.mediaIds, m.id] })} className={`relative aspect-video overflow-hidden rounded border-2 ${added ? "border-primary" : "border-transparent"}`}>
-                  {m.type === "image" ? <img src={m.dataUrl} alt="" className="w-full h-full object-cover" /> : <video src={m.dataUrl} className="w-full h-full object-cover" muted />}
+                <button key={m.id} onClick={() => setDraft((d) => ({ ...d, mediaIds: added ? d.mediaIds.filter((x) => x !== m.id) : [...d.mediaIds, m.id] }))} className={`relative aspect-video overflow-hidden rounded border-2 ${added ? "border-primary" : "border-transparent"}`}>
+                  {m.type === "image" ? <img src={m.url} alt="" className="w-full h-full object-cover" /> : <video src={m.url} className="w-full h-full object-cover" muted />}
                   {added && <div className="absolute inset-0 bg-primary/30 flex items-center justify-center"><Check className="h-6 w-6 text-white" /></div>}
                 </button>
               );
@@ -142,7 +180,7 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
             {items.map((m, idx) => (
               <div key={m.id + idx} className="group rounded-lg border bg-card overflow-hidden">
                 <div className="relative aspect-video bg-black">
-                  {m.type === "image" ? <img src={m.dataUrl} className="w-full h-full object-cover" alt="" /> : <video src={m.dataUrl} className="w-full h-full object-cover" muted />}
+                  {m.type === "image" ? <img src={m.url} className="w-full h-full object-cover" alt="" /> : <video src={m.url} className="w-full h-full object-cover" muted />}
                   <button onClick={() => setPreview(m)} className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition">
                     <Eye className="h-7 w-7 text-white opacity-0 group-hover:opacity-100" />
                   </button>
@@ -150,7 +188,7 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
                 </div>
                 <div className="p-2 flex items-center justify-between gap-2">
                   <span className="text-xs truncate flex items-center gap-1">{m.type === "image" ? <ImageIcon className="h-3 w-3" /> : <Film className="h-3 w-3" />} {m.name}</span>
-                  <button onClick={async () => { if (await dialog.confirm({ title: "Remover da apresentação?", description: "A mídia continua disponível na biblioteca.", confirmLabel: "Remover", destructive: true })) updatePresentation(pres.id, { mediaIds: pres.mediaIds.filter((_, i) => i !== idx) }); }} className="text-destructive"><Trash2 className="h-3 w-3" /></button>
+                  <button onClick={async () => { if (await dialog.confirm({ title: "Remover da apresentação?", description: "A mídia continua disponível na biblioteca.", confirmLabel: "Remover", destructive: true })) setDraft((d) => ({ ...d, mediaIds: d.mediaIds.filter((_, i) => i !== idx) })); }} className="text-destructive"><Trash2 className="h-3 w-3" /></button>
                 </div>
               </div>
             ))}
@@ -160,7 +198,7 @@ function Editor({ pres, media }: { pres: Presentation; media: Media[] }) {
 
       {preview && (
         <div onClick={() => setPreview(null)} className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-8 cursor-zoom-out">
-          {preview.type === "image" ? <img src={preview.dataUrl} className="max-h-full max-w-full object-contain" alt="" /> : <video src={preview.dataUrl} className="max-h-full max-w-full" controls autoPlay />}
+          {preview.type === "image" ? <img src={preview.url} className="max-h-full max-w-full object-contain" alt="" /> : <video src={preview.url} className="max-h-full max-w-full" controls autoPlay />}
         </div>
       )}
     </div>

@@ -40,11 +40,11 @@ export function PresentationPlayer({ presentationId }: { presentationId: string 
   return (
     <div className="h-full w-full bg-black relative">
       {cur.type === "image" ? (
-        <img key={cur.id + idx} src={cur.dataUrl} alt="" className={`h-full w-full object-contain ${animClass}`} />
+        <img key={cur.id + idx} src={cur.url} alt="" className={`h-full w-full object-contain ${animClass}`} />
       ) : (
         <video
           key={cur.id + idx}
-          src={cur.dataUrl}
+          src={cur.url}
           className={`h-full w-full object-contain ${animClass}`}
           autoPlay
           muted

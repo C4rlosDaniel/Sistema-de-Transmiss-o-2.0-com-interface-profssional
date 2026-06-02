@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { useStore, setSession, onTerminalRefresh } from "@/lib/store";
+import { useStore, setSession } from "@/lib/store";
 import { PresentationPlayer } from "@/components/PresentationPlayer";
 import logo from "@/assets/logo.png";
 
@@ -12,10 +12,9 @@ function TerminalScreen() {
   const nav = useNavigate();
   const { terminals } = useStore();
   const terminal = terminals.find((t) => t.id === id);
-  const [tick, setTick] = useState(0);
   const [showUI, setShowUI] = useState(false);
-
-  useEffect(() => onTerminalRefresh(id, () => setTick((t) => t + 1)), [id]);
+  // refreshToken from realtime triggers re-mount of the player
+  const tick = `${terminal?.presentationId ?? ""}::${terminal?.refreshToken ?? 0}`;
 
   useEffect(() => {
     let timeout: number | undefined;
