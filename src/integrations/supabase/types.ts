@@ -14,7 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      media: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          storage_path: string | null
+          type: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          storage_path?: string | null
+          type: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          storage_path?: string | null
+          type?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      presentations: {
+        Row: {
+          created_at: string
+          description: string
+          duration_ms: number
+          id: string
+          loop: boolean
+          media_ids: string[]
+          name: string
+          transition: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          duration_ms?: number
+          id?: string
+          loop?: boolean
+          media_ids?: string[]
+          name: string
+          transition?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration_ms?: number
+          id?: string
+          loop?: boolean
+          media_ids?: string[]
+          name?: string
+          transition?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      terminals: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          last_sync: string
+          name: string
+          presentation_id: string | null
+          refresh_token: number
+          resolution: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_sync?: string
+          name: string
+          presentation_id?: string | null
+          refresh_token?: number
+          resolution?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_sync?: string
+          name?: string
+          presentation_id?: string | null
+          refresh_token?: number
+          resolution?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terminals_presentation_id_fkey"
+            columns: ["presentation_id"]
+            isOneToOne: false
+            referencedRelation: "presentations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
