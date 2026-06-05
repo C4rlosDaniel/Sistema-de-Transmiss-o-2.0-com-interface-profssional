@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          auto_delete_enabled: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          auto_delete_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          auto_delete_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       media: {
         Row: {
           created_at: string
