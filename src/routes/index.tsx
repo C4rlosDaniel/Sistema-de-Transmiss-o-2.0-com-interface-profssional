@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
-import { Lock, User, Monitor, LogIn } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Lock, User, Monitor, LogIn, Zap, X } from "lucide-react";
 import { useStore, setSession } from "@/lib/store";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import loginBg from "@/assets/login-bg.jpg";
 
@@ -25,6 +26,25 @@ function Index() {
   const activeTerms = useMemo(() => terminals.filter((t) => t.active), [terminals]);
   const [termId, setTermId] = useState<string>("");
   const [err, setErr] = useState("");
+  const [setDefault, setSetDefault] = useState(true);
+  const [defaultId, setDefaultId] = useState<string | null>(null);
+
+  // Auto-launch saved default terminal (skip with ?menu=1)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("ccp_default_terminal");
+    setDefaultId(saved);
+    const params = new URLSearchParams(window.location.search);
+    if (saved && !params.has("menu")) {
+      // wait until terminals loaded to validate
+      const ok = terminals.find((t) => t.id === saved && t.active);
+      if (ok) {
+        setSession({ kind: "terminal", terminalId: saved });
+        navigate({ to: "/terminal/$id", params: { id: saved } });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terminals.length]);
 
   const handleAdmin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +57,18 @@ function Index() {
   const handleTerminal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!termId) return setErr("Selecione um terminal.");
+    if (setDefault) {
+      localStorage.setItem("ccp_default_terminal", termId);
+      toast.success("Atalho salvo: este dispositivo abrirá direto neste terminal.");
+    }
     setSession({ kind: "terminal", terminalId: termId });
     navigate({ to: "/terminal/$id", params: { id: termId } });
+  };
+
+  const clearDefault = () => {
+    localStorage.removeItem("ccp_default_terminal");
+    setDefaultId(null);
+    toast.success("Atalho removido.");
   };
 
   return (
@@ -54,7 +84,7 @@ function Index() {
           <h2 className="text-4xl font-bold mb-1">Faça seu login<span className="text-primary">.</span></h2>
           <p className="text-sm text-white/60 mb-8">Acesse como administrador ou entre como terminal de exibição.</p>
 
-          <div className="flex gap-2 mb-6 rounded-lg bg-white/5 p-1">
+          <div className="flex gap-2 mb-6 rounded-lg p-1 ccp-login-card">
             <button onClick={() => { setMode("admin"); setErr(""); }} className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition ${mode === "admin" ? "bg-primary text-primary-foreground" : "text-white/70 hover:text-white"}`}>
               Administrador
             </button>
@@ -63,8 +93,15 @@ function Index() {
             </button>
           </div>
 
+          {defaultId && (
+            <div className="mb-4 flex items-center justify-between gap-2 rounded-lg ccp-login-card px-3 py-2 text-xs">
+              <span className="flex items-center gap-2 text-white/70"><Zap className="h-3.5 w-3.5 text-primary" /> Atalho ativo neste dispositivo</span>
+              <button onClick={clearDefault} className="flex items-center gap-1 text-white/60 hover:text-white"><X className="h-3 w-3" /> Remover</button>
+            </div>
+          )}
+
           {mode === "admin" ? (
-            <form onSubmit={handleAdmin} className="space-y-5">
+            <form onSubmit={handleAdmin} className="space-y-5 ccp-login-card p-6">
               <div>
                 <label className="block text-sm mb-2">Usuário</label>
                 <div className="relative">
@@ -80,12 +117,12 @@ function Index() {
                 </div>
               </div>
               {err && <p className="text-sm text-primary">{err}</p>}
-              <button type="submit" className="w-full rounded-md bg-primary hover:bg-[oklch(0.5_0.2_27)] py-3 font-semibold transition flex items-center justify-center gap-2">
+              <button type="submit" className="ccp-login-btn w-full rounded-md bg-primary hover:bg-[oklch(0.5_0.2_27)] py-3 font-semibold flex items-center justify-center gap-2">
                 <LogIn className="h-4 w-4" /> Entrar
               </button>
             </form>
           ) : (
-            <form onSubmit={handleTerminal} className="space-y-5">
+            <form onSubmit={handleTerminal} className="space-y-5 ccp-login-card p-6">
               <div>
                 <label className="block text-sm mb-2">Selecione o terminal</label>
                 <div className="relative">
@@ -101,8 +138,17 @@ function Index() {
                   <p className="mt-2 text-xs text-white/50">Nenhum terminal cadastrado. Entre como administrador para criar.</p>
                 )}
               </div>
+
+              <label className="flex items-start gap-3 cursor-pointer select-none rounded-md border border-white/10 bg-white/[0.03] p-3 hover:border-white/30 transition">
+                <input type="checkbox" checked={setDefault} onChange={(e) => setSetDefault(e.target.checked)} className="mt-0.5 h-4 w-4 accent-primary" />
+                <span className="text-xs leading-relaxed">
+                  <span className="font-medium block">Definir este terminal como padrão deste dispositivo</span>
+                  <span className="text-white/50">Da próxima vez, o app abrirá direto na exibição em tela cheia. (use <code>?menu=1</code> para retornar a esta tela)</span>
+                </span>
+              </label>
+
               {err && <p className="text-sm text-primary">{err}</p>}
-              <button type="submit" className="w-full rounded-md bg-primary hover:bg-[oklch(0.5_0.2_27)] py-3 font-semibold transition flex items-center justify-center gap-2">
+              <button type="submit" className="ccp-login-btn w-full rounded-md bg-primary hover:bg-[oklch(0.5_0.2_27)] py-3 font-semibold flex items-center justify-center gap-2">
                 <Monitor className="h-4 w-4" /> Entrar como Terminal
               </button>
             </form>
