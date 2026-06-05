@@ -1,21 +1,55 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { Upload, Trash2, Eye, Pencil, Check, X, Search } from "lucide-react";
-import { useStore, addMedia, deleteMediaFromLibrary, renameMedia, type Media } from "@/lib/store";
+import { useRef, useState, useMemo } from "react";
+import { Upload, Trash2, Eye, Pencil, Check, X, Search, CheckSquare, Square, Clock } from "lucide-react";
+import { useStore, addMedia, deleteMediaFromLibrary, renameMedia, deleteMediaBulk, setAutoDeleteEnabled, type Media } from "@/lib/store";
 import { dialog } from "@/components/PremiumDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/library")({ component: Lib });
 
 function Lib() {
-  const { media } = useStore();
+  const { media, autoDeleteEnabled } = useStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState("");
   const [preview, setPreview] = useState<Media | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const filtered = media.filter((m) => m.name.toLowerCase().includes(q.toLowerCase()));
+  const allSelected = filtered.length > 0 && filtered.every((m) => selected.has(m.id));
+  const someSelected = selected.size > 0;
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const selectAll = () => setSelected(new Set(filtered.map((m) => m.id)));
+  const clearAll = () => setSelected(new Set());
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    const ok = await dialog.confirm({
+      title: "Tem certeza que deseja apagar todos os itens selecionados?",
+      description: `Esta ação é irreversível. ${ids.length} arquivo(s) serão removidos permanentemente.`,
+      confirmLabel: "Apagar",
+      cancelLabel: "Cancelar",
+      destructive: true,
+    });
+    if (!ok) return;
+    await deleteMediaBulk(ids);
+    clearAll();
+    toast.success(`${ids.length} item(ns) excluído(s)`);
+  };
+
+  const toggleAutoDelete = async (next: boolean) => {
+    await setAutoDeleteEnabled(next);
+    toast.success(next ? "Exclusão automática ativada (30 dias)" : "Exclusão automática desativada");
+  };
 
   return (
     <div className="space-y-6">
@@ -36,14 +70,47 @@ function Lib() {
         </div>
       </div>
 
+      {/* Toolbar: bulk actions + auto-delete toggle */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card px-4 py-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={allSelected ? clearAll : selectAll} disabled={filtered.length === 0} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50">
+            {allSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+            {allSelected ? "Desmarcar todos" : "Selecionar todos"}
+          </button>
+          {someSelected && (
+            <>
+              <span className="text-xs text-muted-foreground">{selected.size} selecionado(s)</span>
+              <button onClick={bulkDelete} className="flex items-center gap-2 rounded-md bg-destructive text-destructive-foreground px-3 py-1.5 text-xs font-medium hover:opacity-90">
+                <Trash2 className="h-4 w-4" /> Apagar todos os itens selecionados
+              </button>
+            </>
+          )}
+        </div>
+        <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span className="text-muted-foreground">Apagar imagens e vídeos após 30 dias</span>
+          <span className="relative inline-flex">
+            <input type="checkbox" className="peer sr-only" checked={autoDeleteEnabled} onChange={(e) => toggleAutoDelete(e.target.checked)} />
+            <span className="h-5 w-9 rounded-full bg-muted peer-checked:bg-primary transition-colors" />
+            <span className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4" />
+          </span>
+        </label>
+      </div>
+
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed p-16 text-center text-muted-foreground">
           Nenhuma mídia encontrada. Clique em <strong>Enviar</strong> para adicionar imagens (PNG, JPG, WEBP) ou vídeos (MP4).
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filtered.map((m) => (
-            <div key={m.id} className="group premium-border overflow-hidden ccp-anim-zoom">
+          {filtered.map((m) => {
+            const isSel = selected.has(m.id);
+            return (
+            <div key={m.id} className={`group premium-border overflow-hidden ccp-anim-zoom relative ${isSel ? "ring-2 ring-primary" : ""}`}>
+              {/* Selection checkbox */}
+              <button onClick={() => toggle(m.id)} className={`absolute top-2 left-2 z-10 h-6 w-6 rounded-md flex items-center justify-center border-2 transition ${isSel ? "bg-primary border-primary text-primary-foreground" : "bg-black/50 border-white/40 text-transparent hover:border-white"}`}>
+                <Check className="h-4 w-4" />
+              </button>
               <div className="aspect-video bg-black flex items-center justify-center relative">
                 {m.type === "image" ? (
                   <img src={m.url} alt={m.name} className="h-full w-full object-cover" />
@@ -75,7 +142,8 @@ function Lib() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
