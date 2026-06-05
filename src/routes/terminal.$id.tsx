@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Pin, PinOff } from "lucide-react";
 import { useStore, setSession } from "@/lib/store";
 import { PresentationPlayer } from "@/components/PresentationPlayer";
 import logo from "@/assets/logo.png";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/terminal/$id")({ component: TerminalScreen });
 
@@ -13,6 +14,12 @@ function TerminalScreen() {
   const { terminals } = useStore();
   const terminal = terminals.find((t) => t.id === id);
   const [showUI, setShowUI] = useState(false);
+  const [pinned, setPinned] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setPinned(localStorage.getItem("ccp_default_terminal") === id);
+  }, [id]);
   // refreshToken from realtime triggers re-mount of the player
   const tick = `${terminal?.presentationId ?? ""}::${terminal?.refreshToken ?? 0}`;
 
@@ -61,6 +68,19 @@ function TerminalScreen() {
     nav({ to: "/" });
   };
 
+  const togglePin = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (pinned) {
+      localStorage.removeItem("ccp_default_terminal");
+      setPinned(false);
+      toast.success("Terminal desafixado deste dispositivo");
+    } else {
+      localStorage.setItem("ccp_default_terminal", id);
+      setPinned(true);
+      toast.success("Terminal fixado como padrão deste dispositivo");
+    }
+  };
+
   if (!terminal) {
     return (
       <div className="h-screen w-screen bg-black text-white flex flex-col items-center justify-center gap-4">
@@ -84,9 +104,14 @@ function TerminalScreen() {
           <span className="rounded-full bg-white p-0.5"><img src={logo} alt="" className="h-5 w-5 object-contain" /></span>
           <span className="font-semibold">{terminal.name}</span>
         </div>
-        <button onClick={exit} className="flex items-center gap-2 rounded-full bg-black/60 hover:bg-primary text-white px-3 py-1.5 text-xs backdrop-blur transition">
-          <LogOut className="h-3 w-3" /> Sair do Terminal
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={exit} className="flex items-center gap-2 rounded-full bg-black/60 hover:bg-primary text-white px-3 py-1.5 text-xs backdrop-blur transition">
+            <LogOut className="h-3 w-3" /> Sair do Terminal
+          </button>
+          <button onClick={togglePin} className={`flex items-center gap-2 rounded-full text-white px-3 py-1.5 text-xs backdrop-blur transition ${pinned ? "bg-primary/80 hover:bg-primary" : "bg-black/60 hover:bg-primary"}`}>
+            {pinned ? <><PinOff className="h-3 w-3" /> Desafixar este Terminal</> : <><Pin className="h-3 w-3" /> Fixar este Terminal</>}
+          </button>
+        </div>
       </div>
 
       {!terminal.presentationId && (
