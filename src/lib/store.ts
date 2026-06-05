@@ -36,12 +36,13 @@ export type AppState = {
   presentations: Presentation[];
   terminals: Terminal[];
   ready: boolean;
+  autoDeleteEnabled: boolean;
 };
 
 const BUCKET = "media";
 const SIGNED_TTL = 60 * 60 * 24 * 7; // 7 days
 
-const state: AppState = { media: [], presentations: [], terminals: [], ready: false };
+const state: AppState = { media: [], presentations: [], terminals: [], ready: false, autoDeleteEnabled: false };
 const listeners = new Set<(s: AppState) => void>();
 let initStarted = false;
 let initPromise: Promise<void> | null = null;
@@ -101,16 +102,22 @@ async function init() {
   if (initStarted) return initPromise!;
   initStarted = true;
   initPromise = (async () => {
-    const [mRes, pRes, tRes] = await Promise.all([
+    const [mRes, pRes, tRes, sRes] = await Promise.all([
       supabase.from("media").select("*").order("created_at", { ascending: false }),
       supabase.from("presentations").select("*").order("created_at", { ascending: false }),
       supabase.from("terminals").select("*").order("created_at", { ascending: true }),
+      supabase.from("app_settings").select("*").eq("id", true).maybeSingle(),
     ]);
     if (mRes.data) state.media = await Promise.all(mRes.data.map(mapMediaRow));
     if (pRes.data) state.presentations = pRes.data.map(mapPres);
     if (tRes.data) state.terminals = tRes.data.map(mapTerm);
+    if (sRes.data) state.autoDeleteEnabled = !!sRes.data.auto_delete_enabled;
     state.ready = true;
     emit();
+
+    // Run retention sweep now, then every 30 minutes while tab is open
+    runRetentionSweep();
+    setInterval(runRetentionSweep, 30 * 60 * 1000);
 
     // Realtime subscriptions
     supabase
@@ -157,8 +164,37 @@ async function init() {
         emit();
       })
       .subscribe();
+
+    supabase
+      .channel("ccp-settings")
+      .on("postgres_changes", { event: "*", schema: "public", table: "app_settings" }, (payload) => {
+        const row: any = payload.new ?? payload.old;
+        if (row) state.autoDeleteEnabled = !!row.auto_delete_enabled;
+        emit();
+        runRetentionSweep();
+      })
+      .subscribe();
   })();
   return initPromise;
+}
+
+async function runRetentionSweep() {
+  if (!state.autoDeleteEnabled) return;
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const expired = state.media.filter((m) => m.createdAt < cutoff);
+  for (const m of expired) {
+    try { await deleteMediaFromLibrary(m.id); } catch (e) { console.error("retention sweep", e); }
+  }
+}
+
+export async function setAutoDeleteEnabled(enabled: boolean) {
+  await supabase.from("app_settings").update({ auto_delete_enabled: enabled, updated_at: new Date().toISOString() }).eq("id", true);
+}
+
+export async function deleteMediaBulk(ids: string[]) {
+  for (const id of ids) {
+    try { await deleteMediaFromLibrary(id); } catch (e) { console.error(e); }
+  }
 }
 
 export function useStore(): AppState {
