@@ -32,6 +32,21 @@ function TerminalScreen() {
     };
   }, []);
 
+  // Auto-fullscreen when launched as the device's default terminal
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isDefault = localStorage.getItem("ccp_default_terminal") === id;
+    if (!isDefault) return;
+    const tryFs = async () => {
+      try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch {}
+    };
+    tryFs();
+    const once = () => { tryFs(); window.removeEventListener("click", once); window.removeEventListener("keydown", once); };
+    window.addEventListener("click", once);
+    window.addEventListener("keydown", once);
+    return () => { window.removeEventListener("click", once); window.removeEventListener("keydown", once); };
+  }, [id]);
+
   const toggleFs = async () => {
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
